@@ -7,17 +7,23 @@ function jump(target, options) {
             callback: options.callback,
             easing: options.easing || easeInOutQuad
         },
-        distance = typeof target === 'string'
-            ? opt.offset + document.querySelector(target).getBoundingClientRect().top
+        $target = typeof target === 'string' ? document.querySelector(target) : null,
+        distance = $target
+            ? opt.offset + $target.getBoundingClientRect().top
+              + (window.getNavbarHeight ? -1 * window.getNavbarHeight() : 0)
             : target,
         duration = typeof opt.duration === 'function'
             ? opt.duration(distance)
             : opt.duration,
         timeStart, timeElapsed
     ;
-    
+
+    if ($target === null && typeof target === 'string') {
+        return;
+    }
+
     requestAnimationFrame(function(time) { timeStart = time; loop(time); });
-    
+
     function loop(time) {
         timeElapsed = time - timeStart;
 
@@ -35,7 +41,7 @@ function jump(target, options) {
         if (typeof opt.callback === 'function')
             opt.callback();
     }
-    
+
     // Robert Penner's easeInOutQuad - http://robertpenner.com/easing/
     function easeInOutQuad(t, b, c, d)  {
         t /= d / 2
@@ -43,5 +49,5 @@ function jump(target, options) {
         t--
         return -c / 2 * (t * (t - 2) - 1) + b
     }
- 
+
 }

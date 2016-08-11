@@ -5,32 +5,39 @@ function initSmoothScrolling() {
         document.getElementById('css-support-msg').className = 'supported';
         return;
     }
-    
+
     var duration = 400;
-    
+
     var pageUrl = location.hash
         ? stripHash(location.href)
         : location.href
     ;
-    
+
     delegatedLinkHijacking();
     //directLinkHijacking();
-    
+
     function delegatedLinkHijacking() {
         document.body.addEventListener('click', onClick, false);
-        
+
         function onClick(e) {
-            if (!isInPageLink(e.target))
+            var target = e.target;
+
+            while (target.nodeName.toLowerCase() !== 'a' && target.parentElement) {
+                target = target.parentElement;
+            }
+
+            if (!isInPageLink(target))
                 return;
-            
+
             e.stopPropagation();
             e.preventDefault();
-            
-            jump(e.target.hash, {
-                duration: duration,
-                callback: function() {
-                    setFocus(e.target.hash);
-                }
+
+            jump(target.hash, {
+                duration: duration
+                // ,
+                // callback: function() {
+                //     setFocus(target.hash);
+                // }
             });
         }
     }
@@ -40,29 +47,29 @@ function initSmoothScrolling() {
             .filter(isInPageLink)
             .forEach(function(a) { a.addEventListener('click', onClick, false); })
         ;
-            
+
         function onClick(e) {
             e.stopPropagation();
             e.preventDefault();
-            
+
             jump(e.target.hash, {
                 duration: duration
             });
         }
-        
+
     }
 
     function isInPageLink(n) {
-        return n.tagName.toLowerCase() === 'a' 
+        return n.tagName.toLowerCase() === 'a'
             && n.hash.length > 0
             && stripHash(n.href) === pageUrl
         ;
     }
-        
+
     function stripHash(url) {
         return url.slice(0, url.lastIndexOf('#'));
     }
-    
+
     function isCssSmoothSCrollSupported() {
         return 'scrollBehavior' in document.documentElement.style;
     }
