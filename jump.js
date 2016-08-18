@@ -1,22 +1,28 @@
 function jump(target, options) {
-    var 
+    var
         start = window.pageYOffset,
         opt = {
-            duration: options.duration,
+            duration: options.duration || 400,
             offset: options.offset || 0,
             callback: options.callback,
-            easing: options.easing || easeInOutQuad
+            easing: options.easing || easeInOutQuad,
+            scrolled: options.scrolled || window
         },
-        $target = typeof target === 'string' ? document.querySelector(target) : null,
+        $target = typeof target === 'string' ? document.querySelector(target) : (
+            Object.prototype.toString.call(target) === '[object HTMLDivElement]' ? target : null),
         distance = $target
             ? opt.offset + $target.getBoundingClientRect().top
-              + (window.getNavbarHeight ? -1 * window.getNavbarHeight() : 0)
+              + (opt.scrolled === window && window.getNavbarHeight ? -1 * window.getNavbarHeight() : 0)
             : target,
         duration = typeof opt.duration === 'function'
             ? opt.duration(distance)
             : opt.duration,
         timeStart, timeElapsed
     ;
+
+    if (opt.scrolled !== window) {
+        start = opt.scrolled.scrollTop;
+    }
 
     if ($target === null && typeof target === 'string') {
         return;
@@ -27,7 +33,11 @@ function jump(target, options) {
     function loop(time) {
         timeElapsed = time - timeStart;
 
-        window.scrollTo(0, opt.easing(timeElapsed, start, distance, duration));
+        if (opt.scrolled === window) {
+            opt.scrolled.scrollTo(0, opt.easing(timeElapsed, start, distance, duration));
+        } else {
+            opt.scrolled.scrollTop = opt.easing(timeElapsed, start, distance, duration);
+        }
 
         if (timeElapsed < duration)
             requestAnimationFrame(loop)
@@ -36,7 +46,11 @@ function jump(target, options) {
     }
 
     function end() {
-        window.scrollTo(0, start + distance);
+        if (opt.scrolled === window) {
+            opt.scrolled.scrollTo(0, start + distance);
+        } else {
+            opt.scrolled.scrollTop = start + distance;
+        }
 
         if (typeof opt.callback === 'function')
             opt.callback();
